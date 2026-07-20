@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-serif: "Playfair Display", serif;
+  
+  --color-gold-50: #fbf7ee;
+  --color-gold-100: #f5eacf;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #aa841c;
+  --color-gold-900: #4a390b;
+
+  --animate-scanner-down: scanner-down 3s ease-in-out infinite;
+  --animate-progress: progress 15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  --animate-spin-slow: spin 8s linear infinite;
+  --animate-spin-reverse: spin-reverse 6s linear infinite;
+
+  @keyframes scanner-down {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  @keyframes progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(0); }
+  }
+
+  @keyframes spin-reverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+  }
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+body {
+  background-color: #fdfcfb;
+  color: #1a1a1a;
+  font-family: var(--font-sans);
+}
+

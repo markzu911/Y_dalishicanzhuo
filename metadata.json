@@ -1,0 +1,6 @@
+{
+  "name": "大理石餐桌智能试摆图生成器",
+  "description": "上传房间照片与大理石餐桌图片，通过AI智能分析空间布局与餐桌特征，并支持自定义视角、尺寸、清晰度等参数，一键生成高品质的大理石餐桌智能试摆效果图。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
