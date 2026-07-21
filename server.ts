@@ -53,7 +53,8 @@ function buildPrompt(
   hasRoomImage: boolean,
   addModel?: boolean,
   modelGender?: string,
-  modelAgeGroup?: string
+  modelAgeGroup?: string,
+  customInstructions?: string
 ) {
   let mainTask = "";
   let viewDesc = "";
@@ -114,6 +115,12 @@ function buildPrompt(
      - The human figure must be fully integrated into the 3D space with physically accurate contact shadows on the chair or floor, and realistic lighting/reflections that perfectly match the environment. The person's presence must feel candid and natural, enhancing the luxury magazine feel rather than looking like an artificial overlay. The figure should not block the view of the beautiful marble tabletop structure.`;
   }
 
+  const customInstructionText = customInstructions ? `
+  8. ADDITIONAL CUSTOM USER DIRECTIVES (附加个性化定制要求) (CRITICAL):
+     - The user has requested the following custom details, styles, backgrounds, objects, or lighting. You MUST incorporate these instructions fully, coherently, and realistically into the image generation, overriding any conflicting standard configurations:
+     - CUSTOM REQUESTS: ${customInstructions}
+     - Ensure any requested objects, furniture types, materials, or lighting atmospheres are perfectly blended into the dining room scene.` : "";
+
   return `${mainTask}
 
   --- REFERENCE IMAGES EXPLANATION ---
@@ -138,6 +145,7 @@ ${referenceExplanation}
      - You MUST NOT include any living room furniture, such as sofas (沙发), armchairs (单人沙发/扶手椅/休闲椅), lounge chairs, low coffee tables (茶几), TV stands, or entertainment systems.
      - Absolutely NO gallery wall layouts or home decorations that resemble a cozy living room seating nook.
      - The background must consist strictly of dining room elements like high-end kitchen/dining cabinetry, sideboards, dining windows, curtains, or dining room walls. Do not create a combined living-dining room; keep the focus entirely on a dedicated dining room space.${modelInstruction}
+${customInstructionText}
 
   --- EXECUTION DETAILS ---
   - View Perspective: ${viewDesc}
@@ -377,16 +385,16 @@ async function startServer() {
 
   app.post("/api/generate-mockup", async (req, res) => {
     try {
-      const { roomAnalysis, tableAnalysis, roomImage, roomMimeType, tableImage, tableMimeType, viewParam, resolution, aspectRatio, addModel, modelGender, modelAgeGroup, isVirtual: clientIsVirtual } = req.body;
+      const { roomAnalysis, tableAnalysis, roomImage, roomMimeType, tableImage, tableMimeType, viewParam, resolution, aspectRatio, addModel, modelGender, modelAgeGroup, isVirtual: clientIsVirtual, customInstructions } = req.body;
 
       if (!process.env.API_KEY) {
         return res.status(500).json({ error: "API_KEY is not configured in environment secrets." });
       }
 
-      const isVirtual = !!clientIsVirtual || (roomImage && roomImage.startsWith("http"));
+      const isVirtual = !!clientIsVirtual || (roomImage && (roomImage.startsWith("http") || roomImage === "virtual_custom_style"));
       const hasRoomImage = !isVirtual && !!roomImage;
 
-      const prompt = buildPrompt(roomAnalysis, tableAnalysis, viewParam, hasRoomImage, addModel, modelGender, modelAgeGroup);
+      const prompt = buildPrompt(roomAnalysis, tableAnalysis, viewParam, hasRoomImage, addModel, modelGender, modelAgeGroup, customInstructions);
 
       let imageSize = "1K";
       if (resolution === "2k") imageSize = "2K";

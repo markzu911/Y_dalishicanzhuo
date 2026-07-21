@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, ArrowRight, Play, Home, Table, Info } from 'lucide-react';
+import { Sparkles, ArrowRight, Play, Home, Table, Info, Bot, Sliders } from 'lucide-react';
 
 import Header from './components/Header';
 import RoomAnalyzerStep from './components/RoomAnalyzerStep';
 import TableAnalyzerStep from './components/TableAnalyzerStep';
 import ParamsConfiguratorStep from './components/ParamsConfiguratorStep';
 import MockupResultStep from './components/MockupResultStep';
+import AgentChat from './components/AgentChat';
+import LandingPage from './components/LandingPage';
 
 import { FlowStep, RoomAnalysis, TableAnalysis, ViewParam, ResolutionParam, AspectRatioParam, HistoryItem, ModelGenderParam, ModelAgeParam } from './types';
 
@@ -39,6 +41,7 @@ async function base64ToBlob(base64Data: string, contentType = 'image/png') {
 
 export default function App() {
   const [step, setStep] = useState<FlowStep>('UPLOAD_ROOM');
+  const [appMode, setAppMode] = useState<'landing' | 'agent' | 'expert'>('landing');
 
   // SaaS Integration state
   const [userId, setUserId] = useState<string | null>(null);
@@ -64,6 +67,7 @@ export default function App() {
   const [addModel, setAddModel] = useState<boolean>(false);
   const [modelGender, setModelGender] = useState<ModelGenderParam>('女');
   const [modelAgeGroup, setModelAgeGroup] = useState<ModelAgeParam>('青年');
+  const [customInstructions, setCustomInstructions] = useState<string>('');
 
   // Step 4 Generated Result states
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -161,11 +165,14 @@ export default function App() {
     addModel?: boolean;
     modelGender?: ModelGenderParam;
     modelAgeGroup?: ModelAgeParam;
-  }) => {
-    if (!roomAnalysis || !tableAnalysis) return;
+    customInstructions?: string;
+  }, preventStepChange = false): Promise<string | null> => {
+    if (!roomAnalysis || !tableAnalysis) return null;
     setIsGenerating(true);
     setError(null);
-    setStep('CONFIGURE_PARAMS'); // Stay on parameter page but show rendering loading
+    if (!preventStepChange) {
+      setStep('CONFIGURE_PARAMS'); // Stay on parameter page but show rendering loading
+    }
 
     const isOverrideValid = overrideParams && typeof overrideParams === 'object' && 'viewParam' in overrideParams;
     const activeView = isOverrideValid ? overrideParams.viewParam : viewParam;
@@ -174,6 +181,7 @@ export default function App() {
     const activeAddModel = isOverrideValid ? (overrideParams.addModel ?? false) : addModel;
     const activeModelGender = isOverrideValid ? (overrideParams.modelGender ?? '女') : modelGender;
     const activeModelAgeGroup = isOverrideValid ? (overrideParams.modelAgeGroup ?? '青年') : modelAgeGroup;
+    const activeCustomInstructions = (overrideParams && 'customInstructions' in overrideParams) ? overrideParams.customInstructions : customInstructions;
 
     if (isOverrideValid) {
       setViewParam(overrideParams.viewParam);
@@ -182,14 +190,15 @@ export default function App() {
       setAddModel(overrideParams.addModel ?? false);
       if (overrideParams.modelGender) setModelGender(overrideParams.modelGender);
       if (overrideParams.modelAgeGroup) setModelAgeGroup(overrideParams.modelAgeGroup);
+      if (overrideParams.customInstructions !== undefined) setCustomInstructions(overrideParams.customInstructions);
     }
 
     // Double check points before generation
     if (userId && toolId) {
       const isAllowed = await handleBeforeAnalyze();
       if (!isAllowed) {
-        setIsGenerating(false);
-        return;
+         setIsGenerating(false);
+        return null;
       }
     }
 
@@ -212,7 +221,8 @@ export default function App() {
           addModel: activeAddModel,
           modelGender: activeAddModel ? activeModelGender : undefined,
           modelAgeGroup: activeAddModel ? activeModelAgeGroup : undefined,
-          isVirtual: roomImage ? roomImage.startsWith('http') : false,
+          isVirtual: roomImage ? (roomImage.startsWith('http') || roomImage === 'virtual_custom_style') : false,
+          customInstructions: activeCustomInstructions,
         }),
       });
 
@@ -326,11 +336,15 @@ export default function App() {
         return updated;
       });
 
-      setStep('GENERATED_RESULT');
+      if (!preventStepChange) {
+        setStep('GENERATED_RESULT');
+      }
+      return finalImageUrl;
     } catch (err: any) {
       console.error(err);
       setError(err.message || '大理石餐桌摆放图生成失败，请确认您的网络连接或稍后重试。');
       setIsGenerating(false);
+      throw err;
     } finally {
       setIsGenerating(false);
     }
@@ -377,69 +391,45 @@ export default function App() {
   return (
     <div className="h-screen bg-[#fdfcfb] flex flex-col selection:bg-gold-500 selection:text-white overflow-hidden" id="app-root">
       {/* Premium Header with Step Indicators */}
-      <Header currentStep={step} userId={userId} userName={userName} userIntegral={userIntegral} />
+      <Header currentStep={step} appMode={appMode} setAppMode={setAppMode} userId={userId} userName={userName} userIntegral={userIntegral} />
 
       {/* Main Container */}
       <main className="flex-1 max-w-screen-2xl w-full mx-auto px-6 py-4 overflow-y-auto custom-scrollbar flex flex-col items-stretch">
         <AnimatePresence mode="wait">
-          {step === 'UPLOAD_ROOM' && (
+          {appMode === 'landing' ? (
             <motion.div
-              key="room-step"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-12"
+              key="landing-mode"
+              initial={{ opacity: 0, scale: 0.99 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              className="flex-1 flex flex-col"
             >
-              <RoomAnalyzerStep
-                image={roomImage}
-                setImage={setRoomImage}
-                mimeType={roomMimeType}
-                setMimeType={setRoomMimeType}
-                analysis={roomAnalysis}
-                setAnalysis={setRoomAnalysis}
-                onNext={() => setStep('UPLOAD_TABLE')}
-                onBeforeAnalyze={handleBeforeAnalyze}
+              <LandingPage
+                onSelectMode={(mode) => setAppMode(mode)}
+                userIntegral={userIntegral}
               />
             </motion.div>
-          )}
-
-          {step === 'UPLOAD_TABLE' && (
+          ) : appMode === 'agent' ? (
             <motion.div
-              key="table-step"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-12"
+              key="agent-mode"
+              initial={{ opacity: 0, scale: 0.99 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              className="flex-1 min-h-0 flex flex-col"
             >
-              <TableAnalyzerStep
-                image={tableImage}
-                setImage={setTableImage}
-                mimeType={tableMimeType}
-                setMimeType={setTableMimeType}
-                analysis={tableAnalysis}
-                setAnalysis={setTableAnalysis}
-                onNext={() => setStep('CONFIGURE_PARAMS')}
-                onPrev={() => setStep('UPLOAD_ROOM')}
-                onBeforeAnalyze={handleBeforeAnalyze}
-              />
-            </motion.div>
-          )}
-
-          {step === 'CONFIGURE_PARAMS' && (
-            <motion.div
-              key="params-step"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ParamsConfiguratorStep
-                roomImage={roomImage!}
-                tableImage={tableImage!}
-                roomAnalysis={roomAnalysis!}
-                tableAnalysis={tableAnalysis!}
+              <AgentChat
+                roomImage={roomImage}
+                setRoomImage={setRoomImage}
+                roomMimeType={roomMimeType}
+                setRoomMimeType={setRoomMimeType}
+                roomAnalysis={roomAnalysis}
+                setRoomAnalysis={setRoomAnalysis}
+                tableImage={tableImage}
+                setTableImage={setTableImage}
+                tableMimeType={tableMimeType}
+                setTableMimeType={setTableMimeType}
+                tableAnalysis={tableAnalysis}
+                setTableAnalysis={setTableAnalysis}
                 viewParam={viewParam}
                 setViewParam={setViewParam}
                 resolution={resolution}
@@ -452,42 +442,132 @@ export default function App() {
                 setModelGender={setModelGender}
                 modelAgeGroup={modelAgeGroup}
                 setModelAgeGroup={setModelAgeGroup}
-                onSubmit={handleGenerateMockup}
-                onPrev={() => setStep('UPLOAD_TABLE')}
+                generatedImage={generatedImage}
+                setGeneratedImage={setGeneratedImage}
                 isGenerating={isGenerating}
-              />
-
-              {error && (
-                <div className="max-w-2xl mx-auto mt-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 text-sm space-y-2">
-                  <p className="font-semibold">试摆图渲染失败：</p>
-                  <p className="text-xs text-rose-700">{error}</p>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {step === 'GENERATED_RESULT' && (
-            <motion.div
-              key="result-step"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.4 }}
-            >
-              <MockupResultStep
-                generatedImage={generatedImage!}
-                roomAnalysis={roomAnalysis!}
-                tableAnalysis={tableAnalysis!}
-                viewParam={viewParam}
-                resolution={resolution}
-                aspectRatio={aspectRatio}
-                onAdjustParams={() => setStep('CONFIGURE_PARAMS')}
+                setIsGenerating={setIsGenerating}
+                onBeforeAnalyze={handleBeforeAnalyze}
+                onGenerateMockup={(params) => handleGenerateMockup(params, true)}
                 onResetAll={handleResetAll}
-                history={history}
-                onApplyHistoryParams={handleApplyHistoryParams}
-                onClearHistory={handleClearHistory}
+                userId={userId}
+                userIntegral={userIntegral}
+                requiredIntegral={requiredIntegral}
+                customInstructions={customInstructions}
+                setCustomInstructions={setCustomInstructions}
               />
             </motion.div>
+          ) : (
+            <div className="flex-1 flex flex-col">
+              <AnimatePresence mode="wait">
+                {step === 'UPLOAD_ROOM' && (
+                  <motion.div
+                    key="room-step"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-12"
+                  >
+                    <RoomAnalyzerStep
+                      image={roomImage}
+                      setImage={setRoomImage}
+                      mimeType={roomMimeType}
+                      setMimeType={setRoomMimeType}
+                      analysis={roomAnalysis}
+                      setAnalysis={setRoomAnalysis}
+                      onNext={() => setStep('UPLOAD_TABLE')}
+                      onBeforeAnalyze={handleBeforeAnalyze}
+                    />
+                  </motion.div>
+                )}
+
+                {step === 'UPLOAD_TABLE' && (
+                  <motion.div
+                    key="table-step"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-12"
+                  >
+                    <TableAnalyzerStep
+                      image={tableImage}
+                      setImage={setTableImage}
+                      mimeType={tableMimeType}
+                      setMimeType={setTableMimeType}
+                      analysis={tableAnalysis}
+                      setAnalysis={setTableAnalysis}
+                      onNext={() => setStep('CONFIGURE_PARAMS')}
+                      onPrev={() => setStep('UPLOAD_ROOM')}
+                      onBeforeAnalyze={handleBeforeAnalyze}
+                    />
+                  </motion.div>
+                )}
+
+                {step === 'CONFIGURE_PARAMS' && (
+                  <motion.div
+                    key="params-step"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ParamsConfiguratorStep
+                      roomImage={roomImage!}
+                      tableImage={tableImage!}
+                      roomAnalysis={roomAnalysis!}
+                      tableAnalysis={tableAnalysis!}
+                      viewParam={viewParam}
+                      setViewParam={setViewParam}
+                      resolution={resolution}
+                      setResolution={setResolution}
+                      aspectRatio={aspectRatio}
+                      setAspectRatio={setAspectRatio}
+                      addModel={addModel}
+                      setAddModel={setAddModel}
+                      modelGender={modelGender}
+                      setModelGender={setModelGender}
+                      modelAgeGroup={modelAgeGroup}
+                      setModelAgeGroup={setModelAgeGroup}
+                      onSubmit={handleGenerateMockup}
+                      onPrev={() => setStep('UPLOAD_TABLE')}
+                      isGenerating={isGenerating}
+                    />
+
+                    {error && (
+                      <div className="max-w-2xl mx-auto mt-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 text-sm space-y-2">
+                        <p className="font-semibold">试摆图渲染失败：</p>
+                        <p className="text-xs text-rose-700">{error}</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {step === 'GENERATED_RESULT' && (
+                  <motion.div
+                    key="result-step"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <MockupResultStep
+                      generatedImage={generatedImage!}
+                      roomAnalysis={roomAnalysis!}
+                      tableAnalysis={tableAnalysis!}
+                      viewParam={viewParam}
+                      resolution={resolution}
+                      aspectRatio={aspectRatio}
+                      onAdjustParams={() => setStep('CONFIGURE_PARAMS')}
+                      onResetAll={handleResetAll}
+                      history={history}
+                      onApplyHistoryParams={handleApplyHistoryParams}
+                      onClearHistory={handleClearHistory}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </AnimatePresence>
       </main>

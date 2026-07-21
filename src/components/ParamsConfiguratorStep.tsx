@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sliders, Camera, Minimize, Maximize, Landmark, Sparkles, HelpCircle, Check, ArrowLeft, User, Users } from 'lucide-react';
+import { Sliders, Camera, Minimize, Maximize, Landmark, Sparkles, HelpCircle, Check, ArrowLeft, User, Users, Home } from 'lucide-react';
 import { RoomAnalysis, TableAnalysis, ViewParam, ResolutionParam, AspectRatioParam, ModelGenderParam, ModelAgeParam } from '../types';
 
 interface ParamsConfiguratorStepProps {
@@ -147,12 +147,18 @@ export default function ParamsConfiguratorStep({
 
                 {/* Room card */}
                 <div className="flex gap-3 items-center p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-                  <img
-                    src={roomImage}
-                    alt="Room environment"
-                    className="w-12 h-12 object-cover rounded-lg"
-                    referrerPolicy="no-referrer"
-                  />
+                  {roomImage.startsWith('http') ? (
+                    <div className="w-12 h-12 bg-gold-50 border border-gold-100 flex items-center justify-center rounded-lg text-gold-600 shrink-0">
+                      <Home className="w-5 h-5" />
+                    </div>
+                  ) : (
+                    <img
+                      src={roomImage}
+                      alt="Room environment"
+                      className="w-12 h-12 object-cover rounded-lg"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-gray-800">目标房间风格</p>
                     <p className="text-[11px] text-gray-500 truncate mt-0.5">{roomAnalysis.style}</p>

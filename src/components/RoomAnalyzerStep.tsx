@@ -172,57 +172,86 @@ export default function RoomAnalyzerStep({
               </div>
             )
           ) : (
-            <div className="relative rounded-2xl overflow-hidden border border-[#e5e2da] bg-gray-50 group shadow-md" id="room-preview-card">
-              <img
-                src={image}
-                alt="Uploaded Room Environment"
-                className="w-full h-[400px] lg:h-[480px] object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                referrerPolicy="no-referrer"
-              />
-              
-              {/* Scanning Overlay Animation */}
-              {loading && (
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-                  <div className="relative w-20 h-20 mb-6">
-                    <div className="absolute inset-0 rounded-full border-4 border-gold-500/20 animate-ping" />
-                    <div className="absolute inset-0 rounded-full border-4 border-t-gold-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-                    <div className="absolute inset-2 bg-gold-500/10 rounded-full flex items-center justify-center">
-                      <Sparkles className="w-8 h-8 text-gold-500 animate-pulse" />
-                    </div>
-                  </div>
-                  <div className="space-y-2 max-w-xs">
-                    <p className="text-white font-semibold font-display text-lg tracking-wide drop-shadow-md">
-                      {loadingStatus}
-                    </p>
-                    <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-gold-500 animate-progress w-full" />
-                    </div>
-                    <p className="text-white/70 text-[10px] font-medium tracking-tight">
-                      正在深度解析空间风格与环境光影...
-                    </p>
-                  </div>
-                  
-                  {/* Moving scanner line */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div className="w-full h-1 bg-gold-500/50 blur-[2px] absolute top-0 animate-scanner-down" />
-                  </div>
+            image.startsWith('http') ? (
+              <div className="relative rounded-2xl overflow-hidden border border-gold-200 bg-gradient-to-tr from-amber-50 to-gold-50/50 flex flex-col items-center justify-center p-8 text-center h-[400px] lg:h-[480px] shadow-inner" id="room-preview-card">
+                <div className="p-4 bg-gold-500/10 rounded-full text-gold-600 mb-4 border border-gold-200/50">
+                  <Home className="w-10 h-10 animate-pulse" />
                 </div>
-              )}
-
-              <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6 transition-opacity duration-300 ${loading ? 'opacity-100 z-10' : 'opacity-0 group-hover:opacity-100'}`}>
-                <button
-                  onClick={() => {
-                    setImage(null);
-                    setAnalysis(null);
-                    setSelectedVirtualId(null);
-                  }}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white border border-gray-200 text-xs font-medium text-gray-700 transition-all duration-200 shadow-md"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  重新选择/上传空间图
-                </button>
+                <h3 className="text-lg font-bold text-gray-800">已载入推荐场景</h3>
+                <p className="text-sm text-gold-700 font-medium mt-1">
+                  {analysis?.style.split('（')[0] || '预设样板间空间'}
+                </p>
+                <p className="text-xs text-gray-400 mt-4 max-w-xs leading-relaxed">
+                  您选用了预设智能空间模型进行渲染。我们将根据该空间的几何参数、贴图材质与光源布置为您高精呈现试摆效果。
+                </p>
+                
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                  <button
+                    onClick={() => {
+                      setImage(null);
+                      setAnalysis(null);
+                      setSelectedVirtualId(null);
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white border border-gray-200 text-xs font-medium text-gray-700 transition-all duration-200 shadow-md"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    重新选择/上传空间图
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="relative rounded-2xl overflow-hidden border border-[#e5e2da] bg-gray-50 group shadow-md" id="room-preview-card">
+                <img
+                  src={image}
+                  alt="Uploaded Room Environment"
+                  className="w-full h-[400px] lg:h-[480px] object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                  referrerPolicy="no-referrer"
+                />
+                
+                {/* Scanning Overlay Animation */}
+                {loading && (
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+                    <div className="relative w-20 h-20 mb-6">
+                      <div className="absolute inset-0 rounded-full border-4 border-gold-500/20 animate-ping" />
+                      <div className="absolute inset-0 rounded-full border-4 border-t-gold-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+                      <div className="absolute inset-2 bg-gold-500/10 rounded-full flex items-center justify-center">
+                        <Sparkles className="w-8 h-8 text-gold-500 animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-w-xs">
+                      <p className="text-white font-semibold font-display text-lg tracking-wide drop-shadow-md">
+                        {loadingStatus}
+                      </p>
+                      <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-gold-500 animate-progress w-full" />
+                      </div>
+                      <p className="text-white/70 text-[10px] font-medium tracking-tight">
+                        正在深度解析空间风格与环境光影...
+                      </p>
+                    </div>
+                    
+                    {/* Moving scanner line */}
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      <div className="w-full h-1 bg-gold-500/50 blur-[2px] absolute top-0 animate-scanner-down" />
+                    </div>
+                  </div>
+                )}
+
+                <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6 transition-opacity duration-300 ${loading ? 'opacity-100 z-10' : 'opacity-0 group-hover:opacity-100'}`}>
+                  <button
+                    onClick={() => {
+                      setImage(null);
+                      setAnalysis(null);
+                      setSelectedVirtualId(null);
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white border border-gray-200 text-xs font-medium text-gray-700 transition-all duration-200 shadow-md"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    重新选择/上传空间图
+                  </button>
+                </div>
+              </div>
+            )
           )}
 
           {/* Action Trigger */}
