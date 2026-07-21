@@ -1096,7 +1096,7 @@ export default function AgentChat({
                     <ImageUploader
                       onUpload={handleRoomImageUploaded}
                       label="点击或拖拽上传餐厅照片"
-                      description="建议光线明亮、露出完整的空余桌椅摆放地面区域"
+                      description="支持常见图片格式（如 JPG, PNG, WebP），最大支持 20MB（通过前端压缩上传）。"
                       icon={<Landmark className="w-8 h-8 text-gray-300" />}
                       className="h-[180px] min-h-[180px]"
                     />
@@ -1132,7 +1132,7 @@ export default function AgentChat({
                       <ImageUploader
                         onUpload={handleTableImageUploaded}
                         label="点击或拖拽上传大理石餐桌高清照片"
-                        description="建议背景尽量单纯，清晰露出桌面材质花纹与桌腿座垫。"
+                        description="支持常见图片格式（如 JPG, PNG, WebP），最大支持 20MB（通过前端压缩上传）。"
                         icon={<Box className="w-8 h-8 text-gray-300" />}
                         className="h-[180px] min-h-[180px]"
                       />

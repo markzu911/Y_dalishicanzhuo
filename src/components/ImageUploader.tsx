@@ -28,7 +28,40 @@ export default function ImageUploader({ onUpload, label, description, icon, clas
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
       if (base64) {
-        onUpload(base64, file.type);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const MAX_SIZE = 1600;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = Math.round(height * (MAX_SIZE / width));
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = Math.round(width * (MAX_SIZE / height));
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+            onUpload(compressedBase64, 'image/jpeg');
+          } else {
+            onUpload(base64, file.type);
+          }
+        };
+        img.onerror = () => {
+          onUpload(base64, file.type);
+        };
+        img.src = base64;
       } else {
         setError('读取文件失败，请重试');
       }
