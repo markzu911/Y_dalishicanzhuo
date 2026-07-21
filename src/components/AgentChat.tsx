@@ -1412,7 +1412,7 @@ export default function AgentChat({
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="对 AI 助手输入疑问或需求（如“查询我的积分”、“奶油风是什么”）..."
+            placeholder="对 AI 助手输入疑问或需求（如“奶油风是什么”）..."
             className="flex-1 bg-white border border-[#e5e2da] focus:border-gold-500 focus:ring-2 focus:ring-gold-500/10 rounded-2xl px-4 py-3 text-xs outline-none transition-all placeholder:text-gray-400"
             disabled={analyzingRoom || analyzingTable || isGenerating}
             id="chat-input-field"
@@ -1430,9 +1430,6 @@ export default function AgentChat({
         {/* Small tips footer */}
         <div className="max-w-4xl mx-auto flex justify-between items-center mt-2 px-1 text-[9px] text-gray-400 font-mono">
           <p className="flex items-center gap-1">💡 提示：点击上方的样板间或上传按钮，AI 会带您一步步进行摆放！</p>
-          {userId && userIntegral !== null && (
-            <p className="font-bold text-amber-700">可用：{userIntegral} 积分</p>
-          )}
         </div>
       </div>
     </div>
