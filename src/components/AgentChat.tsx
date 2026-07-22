@@ -3,7 +3,7 @@ import {
   MessageSquare, Send, Sparkles, Upload, RefreshCw, Download, Check, 
   Landmark, Camera, Minimize, Maximize, User, AlertTriangle, CheckCircle, 
   Box, Eye, Image as ImageIcon, RotateCcw, ShieldAlert, ArrowRight, UserCheck,
-  Home
+  Home, X
 } from 'lucide-react';
 import { 
   RoomAnalysis, TableAnalysis, ViewParam, ResolutionParam, AspectRatioParam, 
@@ -108,6 +108,7 @@ export default function AgentChat({
   const [analyzingRoom, setAnalyzingRoom] = useState(false);
   const [analyzingTable, setAnalyzingTable] = useState(false);
   const [activeStepId, setActiveStepId] = useState<'room' | 'table' | 'params' | 'complete'>('room');
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -1311,7 +1312,8 @@ export default function AgentChat({
                         <img 
                           src={msg.data.image} 
                           alt="AI Rendered result" 
-                          className="max-w-full max-h-[360px] object-contain rounded-lg"
+                          className="max-w-full max-h-[360px] object-contain rounded-lg cursor-pointer transition-transform hover:scale-[1.02]"
+                          onClick={() => setPreviewImage(msg.data!.image!)}
                         />
                         <div className="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded bg-black/60 text-[8px] font-bold text-white tracking-widest font-mono uppercase">
                           Render Success
@@ -1432,6 +1434,30 @@ export default function AgentChat({
           <p className="flex items-center gap-1">💡 提示：点击上方的样板间或上传按钮，AI 会带您一步步进行摆放！</p>
         </div>
       </div>
+
+      {/* Full-screen Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm transition-opacity"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewImage(null);
+            }}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img 
+            src={previewImage} 
+            alt="Preview" 
+            className="max-w-full max-h-full object-contain rounded-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
